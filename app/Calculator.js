@@ -216,50 +216,123 @@ export default function Calculator() {
     setExporting(true);
     try {
       const { jsPDF } = window.jspdf;
+      const sc = c.comfortable ? "#30b569" : c.canAfford ? "#f59e0b" : "#ef4444";
+      const statusLabel = c.comfortable ? "COMFORTABLE" : c.canAfford ? "MANAGEABLE" : "STRETCHED";
 
-      // Target only the main content, not the whole body (avoids blank space)
-      const target = document.getElementById("calc-root") || document.body;
-      const contentH = target.scrollHeight;
-      const contentW = 1280; // fixed wide viewport so nothing gets clipped
+      // Build a hidden fixed-width div with the full report layout
+      const el = document.createElement("div");
+      el.style.cssText = "position:fixed;left:-9999px;top:0;width:900px;background:#1f2536;font-family:Arial,sans-serif;padding:0;margin:0;";
+      el.innerHTML = `
+        <div style="background:#333b50;padding:28px 40px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid #30b569;">
+          <div>
+            <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:0.12em;">IVORY HILL</div>
+            <div style="font-size:9px;color:#30b569;letter-spacing:0.2em;font-weight:700;margin-top:2px;">WEALTH MANAGEMENT</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;color:#d1d3d4;font-weight:600;">True Cost of Hire</div>
+            <div style="font-size:10px;color:rgba(209,211,212,0.5);margin-top:3px;">${new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}</div>
+          </div>
+        </div>
 
-      const canvas = await window.html2canvas(target, {
+        <div style="background:#3a4359;margin:24px 40px 0;padding:22px 28px;border-radius:8px;border-left:4px solid #30b569;">
+          <div style="font-size:9px;color:#30b569;letter-spacing:0.18em;font-weight:700;margin-bottom:8px;">TOTAL ANNUAL EMPLOYER COST</div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;">
+            <div style="font-size:38px;font-weight:800;color:#fff;">${fmt(c.total)}</div>
+            <div style="font-size:12px;color:#30b569;font-weight:700;">${c.mult.toFixed(2)}x salary &nbsp;·&nbsp; ${fmt(salary)} base &nbsp;·&nbsp; ${c.stName}</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin:16px 40px 0;">
+          ${[["BASE SALARY",fmt(salary)],["401(K) MATCH",match+"%"],["HEALTH",healthOpts[health].label],["WORKERS COMP",(wc*100).toFixed(1)+"%"],["EQUIP/ONBOARD",fmt(equip)]].map(([l,v])=>`
+            <div style="flex:1;background:#3a4359;border-radius:6px;padding:12px 10px;text-align:center;">
+              <div style="font-size:7px;color:#30b569;letter-spacing:0.15em;font-weight:700;margin-bottom:6px;">${l}</div>
+              <div style="font-size:13px;font-weight:800;color:#fff;">${v}</div>
+            </div>`).join("")}
+        </div>
+
+        <div style="margin:24px 40px 0;padding:0 0 8px;">
+          ${[
+            ["BASE COMPENSATION", [["Base Salary", fmt(salary)]]],
+            ["FEDERAL TAXES", [
+              ["Social Security (6.2%)", fmt(c.ss)],
+              ["Medicare (1.45%)", fmt(c.med)],
+              ["FUTA (0.6% on first $7,000)", fmt(c.futa)],
+            ]],
+            ["STATE TAXES — "+stateCode+" ("+c.stName+")", [
+              ["State Unemployment ("+fmtP(STATE_TAXES[stateCode].sui)+", wage base "+fmt(STATE_TAXES[stateCode].suiWageBase)+")", fmt(c.sui)],
+              ...(c.sdi > 0 ? [["State Disability ("+fmtP(STATE_TAXES[stateCode].sdi)+")", fmt(c.sdi)]] : []),
+            ]],
+            ["BENEFITS & OVERHEAD", [
+              ["Health & Dental — "+healthOpts[health].label, fmt(c.hCost)],
+              ["401(k) Employer Match ("+match+"%)", fmt(c.ret)],
+              ["Workers Compensation ("+(wc*100).toFixed(1)+"%)", fmt(c.wcCost)],
+              ["Equipment & Onboarding", fmt(equip)],
+            ]],
+          ].map(([sec, rows]) => `
+            <div style="display:flex;align-items:center;gap:8px;margin:18px 0 8px;">
+              <div style="width:3px;height:12px;background:#30b569;border-radius:2px;flex-shrink:0;"></div>
+              <span style="font-size:8px;color:#30b569;letter-spacing:0.18em;font-weight:700;">${sec}</span>
+            </div>
+            ${rows.map(([label, val]) => `
+              <div style="display:flex;justify-content:space-between;padding:8px 0 8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);">
+                <span style="font-size:12px;color:rgba(209,211,212,0.7);">${label}</span>
+                <span style="font-size:13px;font-weight:700;color:#fff;">${val}</span>
+              </div>`).join("")}
+          `).join("")}
+
+          <div style="display:flex;justify-content:space-between;margin-top:16px;padding:14px 12px;background:#333b50;border-radius:6px;">
+            <span style="font-size:14px;font-weight:800;color:#fff;">TOTAL EMPLOYER COST</span>
+            <span style="font-size:16px;font-weight:800;color:#30b569;">${fmt(c.total)}</span>
+          </div>
+        </div>
+
+        <div style="margin:20px 40px 32px;padding:22px 28px;background:#3a4359;border-radius:8px;border-left:4px solid ${sc};border:1px solid ${sc};">
+          <div style="font-size:18px;font-weight:800;color:${sc};text-align:center;margin-bottom:8px;">${statusLabel}</div>
+          <div style="font-size:12px;color:#d1d3d4;text-align:center;margin-bottom:6px;">${(c.pctRev*100).toFixed(1)}% of ${fmt(revenue)} annual revenue</div>
+          <div style="font-size:11px;color:rgba(209,211,212,0.6);text-align:center;">${
+            c.comfortable
+              ? "At "+(c.pctRev*100).toFixed(0)+"% of revenue, this hire is within sustainable range."
+              : c.canAfford
+              ? "Manageable — this role should generate or protect revenue within 6–12 months."
+              : "Revenue of "+fmt(c.revenueNeeded)+" needed for a healthy 25% labor cost ratio."
+          }</div>
+        </div>
+      `;
+      document.body.appendChild(el);
+
+      const canvas = await window.html2canvas(el, {
         backgroundColor: "#1f2536",
         scale: 2,
         useCORS: true,
         allowTaint: true,
         scrollX: 0,
         scrollY: 0,
-        width: contentW,
-        height: contentH,
-        windowWidth: contentW,
-        windowHeight: contentH,
+        width: 900,
+        height: el.scrollHeight,
+        windowWidth: 900,
+        windowHeight: el.scrollHeight,
       });
 
+      document.body.removeChild(el);
+
       const imgData = canvas.toDataURL("image/png");
-      const imgW = canvas.width;
-      const imgH = canvas.height;
-
-      // Letter-width PDF, height scales proportionally to content
       const pdfW = 816;
-      const pdfH = Math.round((imgH / imgW) * pdfW);
+      const pdfH = Math.round((canvas.height / canvas.width) * pdfW);
 
-      const doc = new jsPDF({ unit: "pt", format: [pdfW, pdfH + 56] });
+      const doc = new jsPDF({ unit: "pt", format: [pdfW, pdfH + 48] });
       doc.setFillColor(31, 37, 54);
-      doc.rect(0, 0, pdfW, pdfH + 56, "F");
+      doc.rect(0, 0, pdfW, pdfH + 48, "F");
       doc.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
-
-      // Footer
       doc.setFillColor(15, 22, 36);
-      doc.rect(0, pdfH, pdfW, 56, "F");
+      doc.rect(0, pdfH, pdfW, 48, "F");
       doc.setFillColor(48, 181, 105);
       doc.rect(0, pdfH, pdfW, 2, "F");
       doc.setTextColor(70, 90, 110);
-      doc.setFontSize(8);
+      doc.setFontSize(7.5);
       doc.setFont("helvetica", "normal");
-      doc.text("Estimates only — consult a CPA for precise figures.  |  ivoryhill.com  |  kurt@ivoryhill.com  |  952.828.5336", pdfW / 2, pdfH + 24, { align: "center" });
+      doc.text("Estimates only — consult a CPA for precise figures.  |  ivoryhill.com  |  kurt@ivoryhill.com  |  952.828.5336", pdfW / 2, pdfH + 20, { align: "center" });
       doc.setTextColor(48, 181, 105);
-      doc.text("Generated " + new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), pdfW / 2, pdfH + 42, { align: "center" });
-
+      doc.text("Generated " + new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), pdfW / 2, pdfH + 36, { align: "center" });
       doc.save("ivory-hill-hire-cost-" + new Date().toISOString().slice(0, 10) + ".pdf");
     } catch (e) { console.error(e); }
     setExporting(false);
