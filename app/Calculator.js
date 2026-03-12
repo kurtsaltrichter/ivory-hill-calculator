@@ -283,9 +283,9 @@ export default function Calculator() {
         <!-- INPUT PILLS -->
         <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.06);">
           ${[["BASE SALARY",fmt(salary)],["401(K) MATCH",match+"%"],["HEALTH COVERAGE",healthOpts[health].label],["WORKERS COMP",(wc*100).toFixed(1)+"%"],["EQUIP / ONBOARD",fmt(equip)],["ANNUAL REVENUE",fmt(revenue)]].map(([l,v],i)=>`
-            <div style="flex:1;padding:16px 12px;text-align:center;border-right:1px solid rgba(255,255,255,0.05);background:${i%2===0?"rgba(255,255,255,0.015)":"transparent"};">
-              <div style="font-size:8px;color:#30b569;letter-spacing:0.16em;font-weight:800;margin-bottom:7px;">${l}</div>
-              <div style="font-size:16px;font-weight:800;color:#fff;">${v}</div>
+            <div style="flex:1;padding:18px 12px;text-align:center;border-right:1px solid rgba(255,255,255,0.07);background:${i%2===0?"rgba(255,255,255,0.03)":"rgba(255,255,255,0.01)"};">
+              <div style="font-size:10px;color:#48bb88;letter-spacing:0.14em;font-weight:800;margin-bottom:8px;">${l}</div>
+              <div style="font-size:17px;font-weight:900;color:#fff;">${v}</div>
             </div>`).join("")}
         </div>
 
@@ -345,10 +345,10 @@ export default function Calculator() {
                   <div style="position:absolute;left:0;top:0;height:100%;width:30%;background:rgba(245,158,11,0.08);border-right:1px dashed rgba(245,158,11,0.5);"></div>
                   <div style="height:100%;width:${barPct}%;background:${sc};border-radius:7px;"></div>
                 </div>
-                <div style="display:flex;justify-content:space-between;margin-top:7px;">
-                  <span style="font-size:10px;color:rgba(48,181,105,0.6);">● Comfortable ≤20%</span>
-                  <span style="font-size:10px;color:rgba(245,158,11,0.6);">● Manageable ≤30%</span>
-                  <span style="font-size:10px;color:rgba(239,68,68,0.5);">● Stretched &gt;30%</span>
+                <div style="display:flex;justify-content:space-between;margin-top:9px;">
+                  <span style="font-size:13px;font-weight:700;color:rgba(48,181,105,0.85);">● Comfortable ≤20%</span>
+                  <span style="font-size:13px;font-weight:700;color:rgba(245,158,11,0.85);">● Manageable ≤30%</span>
+                  <span style="font-size:13px;font-weight:700;color:rgba(239,68,68,0.85);">● Stretched &gt;30%</span>
                 </div>
               </div>
 
