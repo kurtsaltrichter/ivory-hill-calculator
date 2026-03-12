@@ -163,10 +163,17 @@ export default function Calculator() {
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    const s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-    s.onload = () => setPdfReady(true);
-    document.head.appendChild(s);
+    let jspdfLoaded = false;
+    let html2canvasLoaded = false;
+    const check = () => { if (jspdfLoaded && html2canvasLoaded) setPdfReady(true); };
+    const s1 = document.createElement("script");
+    s1.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    s1.onload = () => { jspdfLoaded = true; check(); };
+    const s2 = document.createElement("script");
+    s2.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+    s2.onload = () => { html2canvasLoaded = true; check(); };
+    document.head.appendChild(s1);
+    document.head.appendChild(s2);
   }, []);
 
   const healthOpts = {
@@ -204,104 +211,40 @@ export default function Calculator() {
   const statusColor = c.comfortable ? C.green1 : c.canAfford ? "#f59e0b" : "#ef4444";
   const statusLabel = c.comfortable ? "Comfortable" : c.canAfford ? "Manageable" : "Stretched";
 
-  const doExport = () => {
-    if (!pdfReady || !window.jspdf) return;
+  const doExport = async () => {
+    if (!pdfReady || !window.jspdf || !window.html2canvas) return;
     setExporting(true);
     try {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit: "pt", format: "letter" });
-      const W = 612, m = 48; let y = m;
-
-      doc.setFillColor(31, 37, 54); doc.rect(0, 0, W, 90, "F");
-      doc.setFillColor(48, 181, 105); doc.rect(0, 0, 4, 90, "F");
-      doc.setTextColor(255, 255, 255); doc.setFontSize(20); doc.setFont("helvetica", "bold");
-      doc.text("IVORY HILL", m, 38);
-      doc.setFontSize(8); doc.setTextColor(48, 181, 105); doc.setFont("helvetica", "normal");
-      doc.text("WEALTH MANAGEMENT", m, 52);
-      doc.setFontSize(9); doc.setTextColor(209, 211, 212);
-      doc.text("True Cost of Hire — Employer Cost Analysis", m, 70);
-      doc.text(new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), W - m, 70, { align: "right" });
-
-      y = 110;
-      doc.setFillColor(51, 59, 80); doc.roundedRect(m, y, W - m * 2, 70, 5, 5, "F");
-      doc.setFillColor(48, 181, 105); doc.roundedRect(m, y, 4, 70, 2, 2, "F");
-      doc.setTextColor(209, 211, 212); doc.setFontSize(8); doc.setFont("helvetica", "normal");
-      doc.text("TOTAL ANNUAL EMPLOYER COST", m + 16, y + 20);
-      doc.setTextColor(255, 255, 255); doc.setFontSize(26); doc.setFont("helvetica", "bold");
-      doc.text(fmt(c.total), m + 16, y + 48);
-      doc.setTextColor(48, 181, 105); doc.setFontSize(11);
-      doc.text(`${c.mult.toFixed(2)}x salary  ·  ${fmt(salary)} base  ·  ${c.stName}`, W - m - 10, y + 48, { align: "right" });
-
-      y += 86;
-      const pills = [["Base Salary", fmt(salary)], ["401(k) Match", match + "%"], ["Health", healthOpts[health].label], ["Workers Comp", (wc * 100).toFixed(1) + "%"], ["Equip/Onboard", fmt(equip)]];
-      const pw = (W - m * 2) / pills.length;
-      pills.forEach(([l, v], i) => {
-        const x = m + i * pw;
-        doc.setFillColor(58, 67, 89); doc.roundedRect(x + 2, y, pw - 4, 42, 4, 4, "F");
-        doc.setTextColor(48, 181, 105); doc.setFontSize(7); doc.setFont("helvetica", "normal");
-        doc.text(l.toUpperCase(), x + pw / 2, y + 14, { align: "center" });
-        doc.setTextColor(255, 255, 255); doc.setFontSize(10); doc.setFont("helvetica", "bold");
-        doc.text(v, x + pw / 2, y + 32, { align: "center" });
+      const canvas = await window.html2canvas(document.body, {
+        backgroundColor: "#1f2536",
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        scrollY: -window.scrollY,
+        windowWidth: document.documentElement.scrollWidth,
+        windowHeight: document.documentElement.scrollHeight,
       });
-      y += 58;
-
-      const secLabel = (t) => {
-        doc.setFillColor(48, 181, 105); doc.rect(m, y, 3, 10, "F");
-        doc.setTextColor(48, 181, 105); doc.setFontSize(7.5); doc.setFont("helvetica", "bold");
-        doc.text(t, m + 8, y + 9); y += 20;
-        doc.setDrawColor(80, 90, 110); doc.setLineWidth(0.4); doc.line(m, y - 5, W - m, y - 5);
-      };
-      const row = (label, value, sub = false) => {
-        doc.setTextColor(sub ? 150 : 209, sub ? 160 : 211, sub ? 175 : 212);
-        doc.setFontSize(sub ? 9.5 : 10); doc.setFont("helvetica", "normal");
-        doc.text(label, m + (sub ? 12 : 0), y);
-        doc.setTextColor(sub ? 220 : 255, sub ? 222 : 255, sub ? 225 : 255); doc.setFont("helvetica", "bold");
-        doc.text(value, W - m, y, { align: "right" }); y += 18;
-        doc.setDrawColor(80, 90, 110); doc.setLineWidth(0.3); doc.line(m, y - 5, W - m, y - 5);
-      };
-      const totalRow = (label, value) => {
-        doc.setFillColor(31, 37, 54); doc.rect(m, y - 14, W - m * 2, 24, "F");
-        doc.setTextColor(255, 255, 255); doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text(label, m + 8, y);
-        doc.setTextColor(48, 181, 105); doc.text(value, W - m - 8, y, { align: "right" }); y += 28;
-      };
-
-      secLabel("BASE COMPENSATION"); row("Base Salary", fmt(salary));
-      secLabel("FEDERAL TAXES");
-      row("Social Security (6.2%)", fmt(c.ss), true);
-      row("Medicare (1.45%)", fmt(c.med), true);
-      row("FUTA (0.6% on first $7,000)", fmt(c.futa), true);
-      secLabel(`STATE TAXES — ${stateCode} (${c.stName})`);
-      row(`State Unemployment (${fmtP(STATE_TAXES[stateCode].sui)}, wage base ${fmt(STATE_TAXES[stateCode].suiWageBase)})`, fmt(c.sui), true);
-      if (c.sdi > 0) row(`State Disability (${fmtP(STATE_TAXES[stateCode].sdi)})`, fmt(c.sdi), true);
-      secLabel("BENEFITS & OVERHEAD");
-      row(`Health & Dental — ${healthOpts[health].label}`, fmt(c.hCost), true);
-      row(`401(k) Employer Match (${match}%)`, fmt(c.ret), true);
-      row(`Workers Compensation (${(wc * 100).toFixed(1)}%)`, fmt(c.wcCost), true);
-      row("Equipment & Onboarding", fmt(equip), true);
-      y += 6; totalRow("TOTAL EMPLOYER COST", fmt(c.total));
-
-      y += 10;
-      const sc = c.comfortable ? [48, 181, 105] : c.canAfford ? [245, 158, 11] : [239, 68, 68];
-      doc.setFillColor(58, 67, 89); doc.roundedRect(m, y, W - m * 2, 80, 5, 5, "F");
-      doc.setDrawColor(...sc); doc.setLineWidth(1.5); doc.roundedRect(m, y, W - m * 2, 80, 5, 5, "S");
-      doc.setFillColor(...sc); doc.roundedRect(m, y, 4, 80, 2, 2, "F");
-      doc.setTextColor(...sc); doc.setFontSize(14); doc.setFont("helvetica", "bold");
-      doc.text(statusLabel.toUpperCase(), W / 2, y + 26, { align: "center" });
-      doc.setTextColor(209, 211, 212); doc.setFontSize(10); doc.setFont("helvetica", "normal");
-      doc.text(`${(c.pctRev * 100).toFixed(1)}% of ${fmt(revenue)} annual revenue`, W / 2, y + 44, { align: "center" });
-      const msg = c.comfortable
-        ? `At ${(c.pctRev * 100).toFixed(0)}% of revenue, this hire is within sustainable range.`
-        : c.canAfford
-        ? `Manageable — this role should generate or protect revenue within 6-12 months.`
-        : `Revenue of ${fmt(c.revenueNeeded)} needed for a healthy 25% labor cost ratio.`;
-      doc.setFontSize(9); doc.text(msg, W / 2, y + 62, { align: "center" });
-
-      doc.setFillColor(31, 37, 54); doc.rect(0, 762, W, 30, "F");
-      doc.setTextColor(80, 95, 115); doc.setFontSize(7.5); doc.setFont("helvetica", "normal");
-      doc.text("Estimates only. Consult a CPA for precise figures. SUI/SDI reflect 2025 new employer averages.  |  ivoryhill.com  |  kurt@ivoryhill.com", W / 2, 780, { align: "center" });
-
-      doc.save(`ivory-hill-hire-cost-${new Date().toISOString().slice(0, 10)}.pdf`);
+      const imgData = canvas.toDataURL("image/png");
+      const imgW = canvas.width;
+      const imgH = canvas.height;
+      const pdfW = 816;
+      const pdfH = Math.round((imgH / imgW) * pdfW);
+      const doc = new jsPDF({ unit: "pt", format: [pdfW, pdfH + 56] });
+      doc.setFillColor(31, 37, 54);
+      doc.rect(0, 0, pdfW, pdfH + 56, "F");
+      doc.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
+      doc.setFillColor(15, 22, 36);
+      doc.rect(0, pdfH, pdfW, 56, "F");
+      doc.setFillColor(48, 181, 105);
+      doc.rect(0, pdfH, pdfW, 2, "F");
+      doc.setTextColor(70, 90, 110);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.text("Estimates only — consult a CPA for precise figures.  |  ivoryhill.com  |  kurt@ivoryhill.com  |  952.828.5336", pdfW / 2, pdfH + 24, { align: "center" });
+      doc.setTextColor(48, 181, 105);
+      doc.text("Generated " + new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), pdfW / 2, pdfH + 42, { align: "center" });
+      doc.save("ivory-hill-hire-cost-" + new Date().toISOString().slice(0, 10) + ".pdf");
     } catch (e) { console.error(e); }
     setExporting(false);
   };
