@@ -216,24 +216,39 @@ export default function Calculator() {
     setExporting(true);
     try {
       const { jsPDF } = window.jspdf;
-      const canvas = await window.html2canvas(document.body, {
+
+      // Target only the main content, not the whole body (avoids blank space)
+      const target = document.getElementById("calc-root") || document.body;
+      const contentH = target.scrollHeight;
+      const contentW = 1280; // fixed wide viewport so nothing gets clipped
+
+      const canvas = await window.html2canvas(target, {
         backgroundColor: "#1f2536",
         scale: 2,
         useCORS: true,
         allowTaint: true,
-        scrollY: -window.scrollY,
-        windowWidth: document.documentElement.scrollWidth,
-        windowHeight: document.documentElement.scrollHeight,
+        scrollX: 0,
+        scrollY: 0,
+        width: contentW,
+        height: contentH,
+        windowWidth: contentW,
+        windowHeight: contentH,
       });
+
       const imgData = canvas.toDataURL("image/png");
       const imgW = canvas.width;
       const imgH = canvas.height;
+
+      // Letter-width PDF, height scales proportionally to content
       const pdfW = 816;
       const pdfH = Math.round((imgH / imgW) * pdfW);
+
       const doc = new jsPDF({ unit: "pt", format: [pdfW, pdfH + 56] });
       doc.setFillColor(31, 37, 54);
       doc.rect(0, 0, pdfW, pdfH + 56, "F");
       doc.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
+
+      // Footer
       doc.setFillColor(15, 22, 36);
       doc.rect(0, pdfH, pdfW, 56, "F");
       doc.setFillColor(48, 181, 105);
@@ -244,13 +259,14 @@ export default function Calculator() {
       doc.text("Estimates only — consult a CPA for precise figures.  |  ivoryhill.com  |  kurt@ivoryhill.com  |  952.828.5336", pdfW / 2, pdfH + 24, { align: "center" });
       doc.setTextColor(48, 181, 105);
       doc.text("Generated " + new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), pdfW / 2, pdfH + 42, { align: "center" });
+
       doc.save("ivory-hill-hire-cost-" + new Date().toISOString().slice(0, 10) + ".pdf");
     } catch (e) { console.error(e); }
     setExporting(false);
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: C.navy1, fontFamily: "var(--font-nunito), sans-serif", paddingBottom: "48px" }}>
+    <div id="calc-root" style={{ minHeight: "100vh", background: C.navy1, fontFamily: "var(--font-nunito), sans-serif", paddingBottom: "48px" }}>
 
       {/* Nav */}
       <nav style={{ background: C.navy2, borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "16px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10 }}>
