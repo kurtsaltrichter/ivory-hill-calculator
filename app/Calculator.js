@@ -161,6 +161,7 @@ export default function Calculator() {
   const [tab, setTab] = useState("breakdown");
   const [pdfReady, setPdfReady] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [clientName, setClientName] = useState("");
 
   useEffect(() => {
     let jspdfLoaded = false;
@@ -225,75 +226,76 @@ export default function Calculator() {
         : "You need "+fmt(c.revenueNeeded)+" in annual revenue to hit a healthy 25% labor cost ratio.";
 
       const lineRow = (label, val, indent) => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px ${indent?"12px 9px 12px 20px":"12px"};border-bottom:1px solid rgba(255,255,255,0.05);">
-          <span style="font-size:12px;color:rgba(209,211,212,${indent?"0.6":"0.85"});font-weight:${indent?"400":"500"};">${label}</span>
-          <span style="font-size:13px;font-weight:700;color:${indent?"rgba(255,255,255,0.8)":"#fff"};background:rgba(255,255,255,0.04);padding:3px 10px;border-radius:4px;">${val}</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px ${indent?"14px 12px 14px 26px":"14px"};border-bottom:1px solid rgba(255,255,255,0.05);">
+          <span style="font-size:15px;color:rgba(209,211,212,${indent?"0.65":"0.9"});font-weight:${indent?"400":"500"};">${label}</span>
+          <span style="font-size:15px;font-weight:700;color:${indent?"rgba(255,255,255,0.85)":"#fff"};background:rgba(255,255,255,0.05);padding:4px 14px;border-radius:4px;min-width:90px;text-align:right;">${val}</span>
         </div>`;
       const secHead = (label) => `
-        <div style="display:flex;align-items:center;gap:8px;padding:14px 12px 6px;background:rgba(48,181,105,0.06);border-left:3px solid #30b569;margin:8px 0 0;">
-          <span style="font-size:8px;color:#30b569;letter-spacing:0.2em;font-weight:800;text-transform:uppercase;">${label}</span>
+        <div style="display:flex;align-items:center;gap:8px;padding:14px 14px 8px;background:rgba(48,181,105,0.07);border-left:3px solid #30b569;margin:10px 0 0;">
+          <span style="font-size:11px;color:#30b569;letter-spacing:0.16em;font-weight:800;text-transform:uppercase;">${label}</span>
         </div>`;
 
       const barPct = Math.min(c.pctRev * 100, 100).toFixed(1);
       const surplusColor = (revenue >= c.revenueNeeded) ? "#30b569" : "#ef4444";
       const surplusVal = (revenue >= c.revenueNeeded ? "+" : "") + fmt(revenue - c.revenueNeeded);
+      const clientLine = clientName ? clientName : "—";
 
       const el = document.createElement("div");
-      el.style.cssText = "position:fixed;left:-9999px;top:0;width:1100px;background:#161d2e;font-family:Arial,sans-serif;padding-bottom:0;";
+      el.style.cssText = "position:fixed;left:-9999px;top:0;width:1200px;background:#161d2e;font-family:Arial,sans-serif;";
       el.innerHTML = `
         <!-- HEADER -->
-        <div style="background:linear-gradient(135deg,#1f2a40 0%,#2a3550 100%);padding:26px 44px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #30b569;">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:38px;height:38px;background:linear-gradient(135deg,#30b569,#48bb88);border-radius:8px;display:flex;align-items:center;justify-content:center;">
-              <span style="color:#fff;font-size:14px;font-weight:900;letter-spacing:-1px;">IH</span>
+        <div style="background:linear-gradient(135deg,#1f2a40 0%,#2a3550 100%);padding:30px 48px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #30b569;">
+          <div style="display:flex;align-items:center;gap:16px;">
+            <div style="width:46px;height:46px;background:linear-gradient(135deg,#30b569,#48bb88);border-radius:9px;display:flex;align-items:center;justify-content:center;">
+              <span style="color:#fff;font-size:17px;font-weight:900;letter-spacing:-1px;">IH</span>
             </div>
             <div>
-              <div style="font-size:19px;font-weight:900;color:#fff;letter-spacing:0.14em;line-height:1;">IVORY HILL</div>
-              <div style="font-size:8px;color:#30b569;letter-spacing:0.22em;font-weight:700;margin-top:3px;">WEALTH MANAGEMENT</div>
+              <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:0.14em;line-height:1;">IVORY HILL</div>
+              <div style="font-size:10px;color:#30b569;letter-spacing:0.22em;font-weight:700;margin-top:4px;">WEALTH MANAGEMENT</div>
             </div>
           </div>
           <div style="text-align:center;">
-            <div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:0.04em;">True Cost of Hire</div>
-            <div style="font-size:9px;color:rgba(209,211,212,0.45);margin-top:4px;letter-spacing:0.08em;">EMPLOYER COST ANALYSIS</div>
+            <div style="font-size:17px;font-weight:700;color:#fff;">True Cost of Hire — Employer Cost Analysis</div>
+            ${clientName ? `<div style="font-size:13px;color:rgba(209,211,212,0.55);margin-top:6px;">Prepared for <span style="color:#30b569;font-weight:700;">${clientLine}</span></div>` : ""}
           </div>
           <div style="text-align:right;">
-            <div style="font-size:10px;color:rgba(209,211,212,0.5);letter-spacing:0.05em;">${new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}</div>
-            <div style="font-size:9px;color:rgba(48,181,105,0.6);margin-top:3px;">ivoryhill.com</div>
+            <div style="font-size:12px;color:rgba(209,211,212,0.5);">${new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}</div>
+            <div style="font-size:11px;color:rgba(48,181,105,0.6);margin-top:5px;">ivoryhill.com</div>
           </div>
         </div>
 
         <!-- HERO BAND -->
-        <div style="background:linear-gradient(135deg,#243044 0%,#1e2a3d 100%);padding:28px 44px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.06);">
+        <div style="background:linear-gradient(135deg,#243044 0%,#1e2a3d 100%);padding:32px 48px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.06);">
           <div>
-            <div style="font-size:8.5px;color:#30b569;letter-spacing:0.22em;font-weight:800;margin-bottom:8px;">TOTAL ANNUAL EMPLOYER COST</div>
-            <div style="font-size:52px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px;">${fmt(c.total)}</div>
-            <div style="font-size:12px;color:rgba(209,211,212,0.5);margin-top:8px;">${fmt(salary)} base salary &nbsp;·&nbsp; ${c.stName}</div>
+            <div style="font-size:11px;color:#30b569;letter-spacing:0.22em;font-weight:800;margin-bottom:10px;">TOTAL ANNUAL EMPLOYER COST</div>
+            <div style="font-size:60px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px;">${fmt(c.total)}</div>
+            <div style="font-size:15px;color:rgba(209,211,212,0.5);margin-top:10px;">${fmt(salary)} base salary &nbsp;·&nbsp; ${c.stName}</div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px;">
-            <div style="background:rgba(48,181,105,0.12);border:1px solid rgba(48,181,105,0.3);padding:10px 20px;border-radius:8px;text-align:center;">
-              <div style="font-size:28px;font-weight:900;color:#30b569;line-height:1;">${c.mult.toFixed(2)}x</div>
-              <div style="font-size:8px;color:rgba(48,181,105,0.7);letter-spacing:0.12em;margin-top:3px;">SALARY MULTIPLIER</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:14px;">
+            <div style="background:rgba(48,181,105,0.12);border:1px solid rgba(48,181,105,0.35);padding:14px 26px;border-radius:10px;text-align:center;">
+              <div style="font-size:36px;font-weight:900;color:#30b569;line-height:1;">${c.mult.toFixed(2)}x</div>
+              <div style="font-size:10px;color:rgba(48,181,105,0.7);letter-spacing:0.12em;margin-top:5px;">SALARY MULTIPLIER</div>
             </div>
-            <div style="font-size:10px;color:rgba(209,211,212,0.4);text-align:right;">All-in cost including taxes,<br>benefits &amp; overhead</div>
+            <div style="font-size:12px;color:rgba(209,211,212,0.4);text-align:right;line-height:1.6;">All-in cost including taxes,<br>benefits &amp; overhead</div>
           </div>
         </div>
 
         <!-- INPUT PILLS -->
-        <div style="display:flex;gap:0;margin:0;border-bottom:1px solid rgba(255,255,255,0.06);">
+        <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.06);">
           ${[["BASE SALARY",fmt(salary)],["401(K) MATCH",match+"%"],["HEALTH COVERAGE",healthOpts[health].label],["WORKERS COMP",(wc*100).toFixed(1)+"%"],["EQUIP / ONBOARD",fmt(equip)],["ANNUAL REVENUE",fmt(revenue)]].map(([l,v],i)=>`
-            <div style="flex:1;padding:14px 12px;text-align:center;border-right:1px solid rgba(255,255,255,0.05);background:${i%2===0?"rgba(255,255,255,0.015)":"transparent"};">
-              <div style="font-size:6.5px;color:#30b569;letter-spacing:0.18em;font-weight:800;margin-bottom:6px;">${l}</div>
-              <div style="font-size:14px;font-weight:800;color:#fff;">${v}</div>
+            <div style="flex:1;padding:16px 12px;text-align:center;border-right:1px solid rgba(255,255,255,0.05);background:${i%2===0?"rgba(255,255,255,0.015)":"transparent"};">
+              <div style="font-size:8px;color:#30b569;letter-spacing:0.16em;font-weight:800;margin-bottom:7px;">${l}</div>
+              <div style="font-size:16px;font-weight:800;color:#fff;">${v}</div>
             </div>`).join("")}
         </div>
 
         <!-- TWO COLUMNS -->
-        <div style="display:flex;gap:0;padding:0;">
+        <div style="display:flex;gap:0;">
 
           <!-- LEFT: COST BREAKDOWN -->
-          <div style="flex:1;border-right:1px solid rgba(255,255,255,0.06);padding:24px 0 24px;">
+          <div style="flex:1;border-right:1px solid rgba(255,255,255,0.06);padding:24px 0;">
             <div style="padding:0 24px 14px;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <div style="font-size:9px;color:#30b569;letter-spacing:0.2em;font-weight:800;">COST BREAKDOWN</div>
+              <div style="font-size:11px;color:#30b569;letter-spacing:0.2em;font-weight:800;">COST BREAKDOWN</div>
             </div>
             <div style="padding:0 12px;">
               ${secHead("BASE COMPENSATION")}
@@ -311,59 +313,59 @@ export default function Calculator() {
               ${lineRow("Workers Compensation ("+(wc*100).toFixed(1)+"%)", fmt(c.wcCost), true)}
               ${lineRow("Equipment & Onboarding", fmt(equip), true)}
             </div>
-            <div style="margin:16px 12px 0;padding:16px 18px;background:linear-gradient(135deg,rgba(48,181,105,0.12),rgba(48,181,105,0.06));border:1px solid rgba(48,181,105,0.3);border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:14px;font-weight:900;color:#fff;letter-spacing:0.04em;">TOTAL EMPLOYER COST</span>
-              <span style="font-size:22px;font-weight:900;color:#30b569;">${fmt(c.total)}</span>
+            <div style="margin:16px 12px 0;padding:18px 20px;background:linear-gradient(135deg,rgba(48,181,105,0.12),rgba(48,181,105,0.06));border:1px solid rgba(48,181,105,0.3);border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:16px;font-weight:900;color:#fff;letter-spacing:0.04em;">TOTAL EMPLOYER COST</span>
+              <span style="font-size:24px;font-weight:900;color:#30b569;">${fmt(c.total)}</span>
             </div>
           </div>
 
           <!-- RIGHT: AFFORDABILITY -->
-          <div style="flex:1;padding:24px 0 24px;">
+          <div style="flex:1;padding:24px 0;">
             <div style="padding:0 24px 14px;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <div style="font-size:9px;color:#30b569;letter-spacing:0.2em;font-weight:800;">CAN YOU AFFORD IT?</div>
+              <div style="font-size:11px;color:#30b569;letter-spacing:0.2em;font-weight:800;">CAN YOU AFFORD IT?</div>
             </div>
-            <div style="padding:16px 20px;">
+            <div style="padding:16px 22px;">
 
               <!-- Verdict card -->
-              <div style="background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));border:1.5px solid ${sc};border-radius:10px;padding:22px;text-align:center;margin-bottom:20px;position:relative;overflow:hidden;">
-                <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${sc};"></div>
-                <div style="font-size:28px;font-weight:900;color:${sc};letter-spacing:0.08em;margin-bottom:8px;">${statusLabel}</div>
-                <div style="font-size:13px;color:#d1d3d4;margin-bottom:6px;">${(c.pctRev*100).toFixed(1)}% of ${fmt(revenue)} annual revenue</div>
-                <div style="font-size:11px;color:rgba(209,211,212,0.55);line-height:1.5;">${statusMsg}</div>
+              <div style="border:2px solid ${sc};border-radius:10px;padding:24px;text-align:center;margin-bottom:22px;position:relative;overflow:hidden;background:rgba(255,255,255,0.02);">
+                <div style="position:absolute;top:0;left:0;right:0;height:4px;background:${sc};"></div>
+                <div style="font-size:32px;font-weight:900;color:${sc};letter-spacing:0.08em;margin-bottom:10px;">${statusLabel}</div>
+                <div style="font-size:15px;color:#d1d3d4;margin-bottom:8px;">${(c.pctRev*100).toFixed(1)}% of ${fmt(revenue)} annual revenue</div>
+                <div style="font-size:13px;color:rgba(209,211,212,0.6);line-height:1.6;">${statusMsg}</div>
               </div>
 
               <!-- Progress bar -->
-              <div style="margin-bottom:20px;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                  <span style="font-size:10px;color:rgba(209,211,212,0.55);">Labor Cost as % of Revenue</span>
-                  <span style="font-size:11px;font-weight:800;color:${sc};">${(c.pctRev*100).toFixed(1)}%</span>
+              <div style="margin-bottom:22px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:9px;">
+                  <span style="font-size:12px;color:rgba(209,211,212,0.6);">Labor Cost as % of Revenue</span>
+                  <span style="font-size:14px;font-weight:800;color:${sc};">${(c.pctRev*100).toFixed(1)}%</span>
                 </div>
-                <div style="height:12px;background:rgba(255,255,255,0.07);border-radius:6px;overflow:hidden;position:relative;">
-                  <div style="position:absolute;left:0;top:0;height:100%;width:20%;background:rgba(48,181,105,0.15);border-right:1px dashed rgba(48,181,105,0.4);"></div>
-                  <div style="position:absolute;left:0;top:0;height:100%;width:30%;background:rgba(245,158,11,0.08);border-right:1px dashed rgba(245,158,11,0.4);"></div>
-                  <div style="height:100%;width:${barPct}%;background:linear-gradient(90deg,${sc},${sc}cc);border-radius:6px;transition:width 0.3s;"></div>
+                <div style="height:14px;background:rgba(255,255,255,0.07);border-radius:7px;overflow:hidden;position:relative;">
+                  <div style="position:absolute;left:0;top:0;height:100%;width:20%;background:rgba(48,181,105,0.15);border-right:1px dashed rgba(48,181,105,0.5);"></div>
+                  <div style="position:absolute;left:0;top:0;height:100%;width:30%;background:rgba(245,158,11,0.08);border-right:1px dashed rgba(245,158,11,0.5);"></div>
+                  <div style="height:100%;width:${barPct}%;background:${sc};border-radius:7px;"></div>
                 </div>
-                <div style="display:flex;justify-content:space-between;margin-top:5px;">
-                  <span style="font-size:7.5px;color:rgba(48,181,105,0.5);">● Comfortable ≤20%</span>
-                  <span style="font-size:7.5px;color:rgba(245,158,11,0.5);">● Manageable ≤30%</span>
-                  <span style="font-size:7.5px;color:rgba(239,68,68,0.5);">● Stretched &gt;30%</span>
+                <div style="display:flex;justify-content:space-between;margin-top:7px;">
+                  <span style="font-size:10px;color:rgba(48,181,105,0.6);">● Comfortable ≤20%</span>
+                  <span style="font-size:10px;color:rgba(245,158,11,0.6);">● Manageable ≤30%</span>
+                  <span style="font-size:10px;color:rgba(239,68,68,0.5);">● Stretched &gt;30%</span>
                 </div>
               </div>
 
-              <!-- Metric cards grid -->
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <!-- Metric grid -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 ${[
                   ["Revenue Needed", fmt(c.revenueNeeded), "for 25% labor ratio", "rgba(209,211,212,0.9)"],
                   ["Your Revenue", fmt(revenue), "current annual revenue", "rgba(209,211,212,0.9)"],
                   ["Surplus / Gap", surplusVal, "vs. 25% target", surplusColor],
+                  ["Monthly Cost", fmt(Math.round(c.total/12)), "per month all-in", "rgba(209,211,212,0.9)"],
                   ["Daily Cost", fmt(Math.round(c.total/260)), "per working day", "rgba(209,211,212,0.9)"],
                   ["Hourly Cost", fmt(Math.round(c.total/2080)), "per working hour", "rgba(209,211,212,0.9)"],
-                  ["Monthly Cost", fmt(Math.round(c.total/12)), "per month all-in", "rgba(209,211,212,0.9)"],
                 ].map(([l,v,sub,col])=>`
-                  <div style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px 16px;">
-                    <div style="font-size:18px;font-weight:900;color:${col};line-height:1;margin-bottom:4px;">${v}</div>
-                    <div style="font-size:10px;font-weight:700;color:rgba(209,211,212,0.8);margin-bottom:2px;">${l}</div>
-                    <div style="font-size:8.5px;color:rgba(209,211,212,0.35);">${sub}</div>
+                  <div style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:16px 18px;">
+                    <div style="font-size:22px;font-weight:900;color:${col};line-height:1;margin-bottom:5px;">${v}</div>
+                    <div style="font-size:12px;font-weight:700;color:rgba(209,211,212,0.8);margin-bottom:3px;">${l}</div>
+                    <div style="font-size:10px;color:rgba(209,211,212,0.35);">${sub}</div>
                   </div>`).join("")}
               </div>
             </div>
@@ -371,23 +373,23 @@ export default function Calculator() {
         </div>
 
         <!-- FOOTER -->
-        <div style="background:linear-gradient(135deg,#151c2e,#1a2236);padding:14px 44px;border-top:2px solid #30b569;display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:8.5px;color:rgba(209,211,212,0.35);">Estimates only — consult a CPA for precise figures. SUI/SDI reflect 2025 new employer averages.</span>
-          <span style="font-size:8.5px;color:rgba(48,181,105,0.6);">ivoryhill.com &nbsp;|&nbsp; kurt@ivoryhill.com &nbsp;|&nbsp; 952.828.5336</span>
+        <div style="background:linear-gradient(135deg,#151c2e,#1a2236);padding:16px 48px;border-top:2px solid #30b569;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;color:rgba(209,211,212,0.35);">Estimates only — consult a CPA for precise figures. SUI/SDI reflect 2025 new employer averages.</span>
+          <span style="font-size:11px;color:rgba(48,181,105,0.6);">ivoryhill.com &nbsp;|&nbsp; kurt@ivoryhill.com &nbsp;|&nbsp; 952.828.5336</span>
         </div>
       `;
 
       document.body.appendChild(el);
       const canvas = await window.html2canvas(el, {
         backgroundColor: "#161d2e",
-        scale: 2,
+        scale: 3,
         useCORS: true,
         allowTaint: true,
         scrollX: 0,
         scrollY: 0,
-        width: 1100,
+        width: 1200,
         height: el.scrollHeight,
-        windowWidth: 1100,
+        windowWidth: 1200,
         windowHeight: el.scrollHeight,
       });
       document.body.removeChild(el);
@@ -397,7 +399,8 @@ export default function Calculator() {
       const pdfH = Math.round((canvas.height / canvas.width) * pdfW);
       const doc = new jsPDF({ unit: "pt", format: [pdfW, pdfH], orientation: "landscape" });
       doc.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
-      doc.save("ivory-hill-hire-cost-" + new Date().toISOString().slice(0, 10) + ".pdf");
+      const safeName = clientName ? "-" + clientName.replace(/[^a-z0-9]/gi,"_").toLowerCase() : "";
+      doc.save("ivory-hill-hire-cost" + safeName + "-" + new Date().toISOString().slice(0,10) + ".pdf");
     } catch (e) { console.error(e); }
     setExporting(false);
   };
@@ -443,9 +446,22 @@ export default function Calculator() {
 
         {/* LEFT: Inputs */}
         <div style={{ background: C.navy2, borderRadius: "16px", padding: "28px", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <div style={{ fontSize: "10px", color: C.green1, letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: "700", marginBottom: "24px" }}>
+          <div style={{ fontSize: "10px", color: C.green1, letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: "700", marginBottom: "20px" }}>
             Configure Hire
           </div>
+
+          {/* Prepared For */}
+          <div style={{ marginBottom: "24px" }}>
+            <div style={{ fontSize: "11px", color: C.gray, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: "600", marginBottom: "8px" }}>Prepared For</div>
+            <input
+              type="text"
+              placeholder="Client name (optional)"
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "10px 14px", color: C.white, fontSize: "13px", fontFamily: "var(--font-nunito), sans-serif", outline: "none", boxSizing: "border-box" }}
+            />
+          </div>
+
           <Slider label="Base Salary" value={salary} min={40000} max={300000} step={5000} onChange={setSalary} format={fmt} />
           <Slider label="401(k) Match" value={match} min={0} max={6} step={0.5} onChange={setMatch} format={(v) => v + "%"} />
           <Slider label="Workers' Comp Rate" value={wc} min={0.002} max={0.04} step={0.001} onChange={setWc} format={(v) => (v * 100).toFixed(1) + "%"} />
